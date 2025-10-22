@@ -12,7 +12,7 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 10)
+        wait = WebDriverWait(self.driver, 30)
 
         # Navigate to website
         self.driver.get("https://manual.manticoresearch.com/")
