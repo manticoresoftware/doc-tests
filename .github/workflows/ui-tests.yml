@@ -1,0 +1,33 @@
+name: Selenium UI Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: '0 0 * * *'
+
+jobs:
+  selenium-tests:
+    runs-on: ubuntu-latest
+
+    services:
+      selenium:
+        image: selenium/standalone-chrome:4
+        ports:
+          - 4444:4444
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Selenium test dependencies
+        run: pip install -r manual/requirements.txt
+
+      - name: Run documentation tests
+        run: pytest manual/tests -v --maxfail=1 --disable-warnings
