@@ -28,8 +28,16 @@ class TestManualSearch(BaseTest):
         import time
         time.sleep(10)
 
+        # Take screenshot before waiting for search results
+        self.take_screenshot("before_search_results")
+
         # Wait for search results to appear
-        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".search-res-item")))
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".search-res-item")))
+        except TimeoutException:
+            # Take screenshot on failure to see what's actually on the page
+            self.take_screenshot("search_timeout_failure")
+            raise
 
         # Verify search results contain installation-related content
         search_results = self.driver.find_elements(By.CSS_SELECTOR, ".search-res-item")

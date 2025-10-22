@@ -1,10 +1,32 @@
 import pytest
+import os
+from datetime import datetime
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 
 class BaseTest:
     """Base class that sets up and tears down the Selenium WebDriver."""
+
+    def take_screenshot(self, name="screenshot"):
+        """Take a screenshot and save it to screenshots directory."""
+        if not hasattr(self, 'driver'):
+            return
+        
+        # Create screenshots directory if it doesn't exist
+        os.makedirs("screenshots", exist_ok=True)
+        
+        # Generate timestamp for unique filename
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"screenshots/{name}_{timestamp}.png"
+        
+        try:
+            self.driver.save_screenshot(filename)
+            print(f"Screenshot saved: {filename}")
+            return filename
+        except Exception as e:
+            print(f"Failed to take screenshot: {e}")
+            return None
 
     @pytest.fixture(autouse=True, scope="class")
     def setup_driver(self, request):
