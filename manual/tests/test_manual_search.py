@@ -3,6 +3,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
+from selenium.webdriver.common.action_chains import ActionChains
 from core.base_test import BaseTest
 
 
@@ -24,13 +25,17 @@ class TestManualSearch(BaseTest):
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
 
-        self.driver.execute_script("""
-            var query_input = document.getElementById("query");
-            query_input.value = "installation";
-            query_input.dispatchEvent(new Event('input', {bubbles: true}));
-            query_input.dispatchEvent(new Event('keyup', {bubbles: true}));
-            query_input.dispatchEvent(new Event('change', {bubbles: true}));
-        """)
+        ActionChains(self.driver) \
+            .send_keys("installatioN") \
+            .perform()
+
+        # self.driver.execute_script("""
+        #     var query_input = document.getElementById("query");
+        #     query_input.value = "installation";
+        #     query_input.dispatchEvent(new Event('input', {bubbles: true}));
+        #     query_input.dispatchEvent(new Event('keyup', {bubbles: true}));
+        #     query_input.dispatchEvent(new Event('change', {bubbles: true}));
+        # """)
 
 
         self.driver.implicitly_wait(3)
