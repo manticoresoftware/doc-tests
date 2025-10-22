@@ -26,7 +26,7 @@ class TestManualSearch(BaseTest):
         query_input.send_keys("installation")
 
         import time
-        time.sleep(5)
+        time.sleep(10)
 
         # Wait for search results to appear
         wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".search-res-item")))
