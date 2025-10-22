@@ -38,4 +38,4 @@ jobs:
         with:
           name: test-screenshots
           path: screenshots/
-          retention-days: 7
+          retention-days: 1

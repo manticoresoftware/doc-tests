@@ -24,7 +24,7 @@ class TestManualSearch(BaseTest):
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
 
-        query_input.send_keys("installation")
+        query_input.send_keys("installation searchd")
 
         # Hack, cause just send keys is not enough for our engine to react
         self.driver.execute_script("""
@@ -37,7 +37,7 @@ class TestManualSearch(BaseTest):
         import time
         time.sleep(3)
 
-
+        self.take_screenshot("search_filled_form")
         # Wait for search results to appear
         try:
             wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".search-res-item")))
@@ -46,19 +46,10 @@ class TestManualSearch(BaseTest):
             self.take_screenshot("search_timeout_failure")
             raise
 
-        # Verify search results contain installation-related content
-        search_results = self.driver.find_elements(By.CSS_SELECTOR, ".search-res-item")
-        assert len(search_results) > 0, "No search results found"
 
         # Click first search result
         first_result = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item:nth-child(1) a")))
         first_result.click()
-
-
-        # Verify we navigated to a new page (URL should have changed)
-        current_url = self.driver.current_url
-        assert "manual.manticoresearch.com" in current_url, f"Expected to stay on manticore domain, got: {current_url}"
-
 
         target_url = "https://manual.manticoresearch.com/Installation/Installation#Installation"
         try:
