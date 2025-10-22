@@ -12,17 +12,10 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 30)
+        wait = WebDriverWait(self.driver, 10)
 
         # Navigate to website
         self.driver.get("https://manual.manticoresearch.com/")
-
-        # Initialize JavaScript error tracking
-        self.get_javascript_errors()
-
-        # Capture initial console logs and JavaScript errors
-        self.capture_console_logs("after page load")
-        self.print_javascript_errors("after page load")
 
         # Scroll to top
         self.driver.execute_script("window.scrollTo(0,0)")
@@ -30,21 +23,20 @@ class TestManualSearch(BaseTest):
         # Wait for and click search input
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
+
         query_input.send_keys("installation")
 
-        # Capture logs after typing search query
-        self.capture_console_logs("after typing search query")
-        self.print_javascript_errors("after typing search query")
+        # Hack, cause just send keys is not enough for our engine to react
+        self.driver.execute_script("""
+            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('keyup', {bubbles: true}));
+            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
+        """, query_input)
+
 
         import time
-        time.sleep(10)
+        time.sleep(3)
 
-        # Take screenshot before waiting for search results
-        self.take_screenshot("before_search_results")
-
-        # Capture logs before searching for results
-        self.capture_console_logs("before searching for results")
-        self.print_javascript_errors("before searching for results")
 
         # Wait for search results to appear
         try:
@@ -52,9 +44,6 @@ class TestManualSearch(BaseTest):
         except TimeoutException:
             # Take screenshot on failure to see what's actually on the page
             self.take_screenshot("search_timeout_failure")
-            # Capture final console logs and errors on failure
-            self.capture_console_logs("on search timeout failure")
-            self.print_javascript_errors("on search timeout failure")
             raise
 
         # Verify search results contain installation-related content
