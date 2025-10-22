@@ -24,14 +24,13 @@ class TestManualSearch(BaseTest):
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
 
-        query_input.send_keys("installation searchd")
-
-        # Hack, cause just send keys is not enough for our engine to react
         self.driver.execute_script("""
-            arguments[0].dispatchEvent(new Event('input', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('keyup', {bubbles: true}));
-            arguments[0].dispatchEvent(new Event('change', {bubbles: true}));
-        """, query_input)
+            var query_input = document.getElementById("query");
+            query_input.value = "installation";
+            query_input.dispatchEvent(new Event('input', {bubbles: true}));
+            query_input.dispatchEvent(new Event('keyup', {bubbles: true}));
+            query_input.dispatchEvent(new Event('change', {bubbles: true}));
+        """)
 
 
         import time
