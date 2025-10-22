@@ -33,8 +33,7 @@ class TestManualSearch(BaseTest):
         """)
 
 
-        import time
-        time.sleep(3)
+        self.driver.implicitly_wait(3)
 
         self.take_screenshot("search_filled_form")
         # Wait for search results to appear
