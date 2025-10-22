@@ -1,8 +1,32 @@
 import pytest
 import os
 from datetime import datetime
+from copy import deepcopy
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.command import Command
+
+
+class CustomRemoteWebDriver(webdriver.Remote):
+    """Custom Remote WebDriver with console logging support for Selenium 4."""
+    
+    @property
+    def log_types(self):
+        try:
+            # local Chrome
+            return super().log_types
+        except AttributeError:
+            # remote Chrome
+            return self.execute(Command.GET_AVAILABLE_LOG_TYPES)['value']
+    
+    def get_log(self, log_type):
+        try:
+            # local Chrome
+            log = super().get_log(log_type)
+        except AttributeError:
+            # remote Chrome
+            log = self.execute(Command.GET_LOG, {"type": log_type})['value']
+        return log
 
 
 class BaseTest:
@@ -119,9 +143,12 @@ class BaseTest:
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        
+        # Enable logging
+        options.set_capability('goog:loggingPrefs', {'browser': 'ALL'})
 
-        # Create remote WebDriver connection
-        driver = webdriver.Remote(
+        # Create custom remote WebDriver connection with logging support
+        driver = CustomRemoteWebDriver(
             command_executor=selenium_grid_url,
             options=options
         )
