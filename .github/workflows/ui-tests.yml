@@ -27,7 +27,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install Selenium test dependencies
-        run: pip install -r manual/requirements.txt
+        run: pip install -r core/requirements.txt
 
       - name: Run documentation tests
         run: pytest manual/tests -v --maxfail=1 --disable-warnings
