@@ -17,6 +17,13 @@ class TestManualSearch(BaseTest):
         # Navigate to website
         self.driver.get("https://manual.manticoresearch.com/")
 
+        # Initialize JavaScript error tracking
+        self.get_javascript_errors()
+
+        # Capture initial console logs and JavaScript errors
+        self.capture_console_logs("after page load")
+        self.print_javascript_errors("after page load")
+
         # Scroll to top
         self.driver.execute_script("window.scrollTo(0,0)")
 
@@ -25,11 +32,19 @@ class TestManualSearch(BaseTest):
         query_input.click()
         query_input.send_keys("installation")
 
+        # Capture logs after typing search query
+        self.capture_console_logs("after typing search query")
+        self.print_javascript_errors("after typing search query")
+
         import time
         time.sleep(10)
 
         # Take screenshot before waiting for search results
         self.take_screenshot("before_search_results")
+
+        # Capture logs before searching for results
+        self.capture_console_logs("before searching for results")
+        self.print_javascript_errors("before searching for results")
 
         # Wait for search results to appear
         try:
@@ -37,6 +52,9 @@ class TestManualSearch(BaseTest):
         except TimeoutException:
             # Take screenshot on failure to see what's actually on the page
             self.take_screenshot("search_timeout_failure")
+            # Capture final console logs and errors on failure
+            self.capture_console_logs("on search timeout failure")
+            self.print_javascript_errors("on search timeout failure")
             raise
 
         # Verify search results contain installation-related content
