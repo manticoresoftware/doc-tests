@@ -38,12 +38,10 @@ class TestManualSearch(BaseTest):
         # """)
 
 
-        self.driver.implicitly_wait(3)
-
         self.take_screenshot("search_filled_form")
         # Wait for search results to appear
         try:
-            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".search-res-item")))
+            wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item")))
         except TimeoutException:
             # Take screenshot on failure to see what's actually on the page
             self.take_screenshot("search_timeout_failure")
