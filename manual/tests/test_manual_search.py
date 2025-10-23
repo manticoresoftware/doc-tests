@@ -45,7 +45,18 @@ class TestManualSearch(BaseTest):
 
         query_input.click()
         query_input.send_keys("i")
-        
+        query_input.send_keys("n")
+        query_input.send_keys("s")
+        query_input.send_keys("t")
+        query_input.send_keys("a")
+        query_input.send_keys("l")
+        query_input.send_keys("l")
+        query_input.send_keys("a")
+        query_input.send_keys("t")
+        query_input.send_keys("i")
+        query_input.send_keys("o")
+        query_input.send_keys("n")
+
         # Check events immediately
         import time
         time.sleep(0.5)
