@@ -13,7 +13,7 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 300)
+        wait = WebDriverWait(self.driver, 60)
 
         # Enable Network domain for response body capture
         try:
@@ -41,7 +41,7 @@ class TestManualSearch(BaseTest):
         except TimeoutException:
             # Take screenshot on failure to see what's actually on the page
             # Capture AJAX/search requests right after typing
-            self.capture_network_logs("after_fail", xhr_only=True)
+            self.capture_network_logs("after_fail", xhr_only=False)
             self.capture_console_logs("JS logs")
 
             self.print_javascript_errors("JS errors")
