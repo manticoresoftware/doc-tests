@@ -24,10 +24,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: "3.9"
 
       - name: Install Selenium test dependencies
-        run: pip install -r manual/requirements.txt
+        run: pip install -r core/requirements.txt
 
       - name: Run documentation tests
-        run: pytest manual/tests -v --maxfail=1 --disable-warnings
+        run: pytest manual/tests -v -s --maxfail=1 --disable-warnings
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-screenshots
+          path: screenshots/
+          retention-days: 1
