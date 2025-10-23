@@ -30,7 +30,7 @@ jobs:
         run: pip install -r core/requirements.txt
 
       - name: Run documentation tests
-        run: pytest manual/tests -v --maxfail=1 --disable-warnings
+        run: pytest manual/tests -v -s --maxfail=1 --disable-warnings
 
       - name: Upload screenshots on failure
         if: failure()
