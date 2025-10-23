@@ -33,23 +33,21 @@ class TestManualSearch(BaseTest):
         query_input.send_keys("installation")
 
         self.take_screenshot("1search_filled_form")
-        
-        # Wait a bit for requests to complete
-        import time
-        time.sleep(1)
-        
-        # Capture AJAX/search requests right after typing
-        self.capture_network_logs("after_search_input", xhr_only=True)
-        
+
         # Wait for search results to appear
         try:
             wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item")))
         except TimeoutException:
             # Take screenshot on failure to see what's actually on the page
+            # Capture AJAX/search requests right after typing
+            self.capture_network_logs("after_fail", xhr_only=True)
             self.take_screenshot("search_timeout_failure")
             raise
 
         self.take_screenshot("2search_after_form")
+        # Capture AJAX/search requests right after typing
+        self.capture_network_logs("after_search_input", xhr_only=True)
+
 
         # Click first search result
         first_result = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item:nth-child(1) a")))
