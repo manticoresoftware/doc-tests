@@ -35,65 +35,14 @@ class TestManualSearch(BaseTest):
         
         # Take screenshot to see what's loaded
         self.take_screenshot("page_loaded")
-        
-        # Check if we got a privacy error page
-        if "Privacy error" in self.driver.title or "privacy" in self.driver.current_url.lower():
-            print("❌ Got a privacy error page - SSL certificate issue")
-            print("Page source snippet:")
-            page_source = self.driver.page_source[:1000]
-            print(page_source)
-            
-            # Try to proceed anyway if there's a link
-            try:
-                proceed_link = self.driver.find_element(By.ID, "proceed-link")
-                proceed_link.click()
-                print("✅ Clicked proceed link")
-                time.sleep(2)
-                print(f"New URL after proceeding: {self.driver.current_url}")
-                self.take_screenshot("after_proceed")
-            except Exception as e:
-                print(f"Could not find proceed link: {e}")
-                
-                # Try alternative approach - navigate to the HTTPS version explicitly
-                print("Trying to navigate directly with HTTPS...")
-                self.driver.get("https://manual.manticoresearch.com/")
-                time.sleep(2)
-        
-        # Debug: Check what search elements exist
-        print("🔍 Looking for search elements...")
-        
-        # Check for various search input selectors
-        search_selectors = [
-            "input[id='query']",
-            "input[type='search']", 
-            "input[placeholder*='search' i]",
-            ".search-input",
-            "#search",
-            "input[name='q']",
-            "input[name='query']"
-        ]
-        
-        for selector in search_selectors:
-            elements = self.driver.find_elements(By.CSS_SELECTOR, selector)
-            print(f"  Selector '{selector}': {len(elements)} elements found")
 
         # Wait for and click search input
         try:
             query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         except Exception as e:
             print(f"❌ Could not find search input with ID 'query': {e}")
-            # Try alternative selectors
-            for selector in search_selectors[1:]:  # Skip the first one we already tried
-                try:
-                    query_input = self.driver.find_element(By.CSS_SELECTOR, selector)
-                    print(f"✅ Found search input with selector: {selector}")
-                    break
-                except:
-                    continue
-            else:
-                print("❌ No search input found with any selector")
-                self.take_screenshot("no_search_input_found")
-                raise Exception("Could not find search input element")
+            raise Exception("Could not find search input element")
+
         query_input.click()
         
         # Add event listener to debug if input events are firing
