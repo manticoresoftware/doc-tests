@@ -44,22 +44,11 @@ class TestManualSearch(BaseTest):
             raise Exception("Could not find search input element")
 
         query_input.click()
-        
-        # Add event listener to debug if input events are firing
-
-        
-        print("Testing if Selenium send_keys triggers JavaScript events...")
-        
-        # Test with just one character first
         query_input.send_keys("i")
         
         # Check events immediately
         import time
         time.sleep(0.5)
-        
-
-
-        print("✅ Selenium send_keys() DOES trigger input events!")
 
 
         self.take_screenshot("search_input_debug")
@@ -69,26 +58,10 @@ class TestManualSearch(BaseTest):
             print("Waiting for search results...")
             wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item")))
             print("✅ Search results appeared!")
-            
-            # Take final screenshot
-            self.take_screenshot("search_results_success")
-            
-            # Capture network logs to see if search requests were made
-            self.capture_network_logs("search_success", xhr_only=True)
-            
+
         except TimeoutException:
             print("❌ Search results did not appear")
-            
-            # Debug info
-            final_events = self.driver.execute_script("""
-                return {
-                    inputEvents: window.inputEventsFired || 0,
-                    keydownEvents: window.keydownEventsFired || 0,
-                    inputValue: document.getElementById('query').value
-                };
-            """)
-            print(f"Final event counts: {final_events}")
-            
+
             # Capture network logs and screenshots
             self.capture_network_logs("search_failure", xhr_only=False)
             self.capture_console_logs("console_failure")
