@@ -77,13 +77,13 @@ class BaseTest:
         except Exception as e:
             print(f"Failed to capture console logs: {e}")
 
-    def get_javascript_errors(self):
-        """Get JavaScript errors by injecting error detection script."""
+    def start_javascript_error_monitoring(self):
+        """Install JavaScript error listener. Call this early to catch all errors."""
         if not hasattr(self, 'driver'):
-            return []
+            return
         
         try:
-            # Inject JavaScript to collect errors
+            # Install error listener if not already present
             js_script = """
             if (!window.jsErrors) {
                 window.jsErrors = [];
@@ -97,10 +97,19 @@ class BaseTest:
                     });
                 });
             }
-            return window.jsErrors;
             """
-            
-            errors = self.driver.execute_script(js_script)
+            self.driver.execute_script(js_script)
+        except Exception as e:
+            print(f"Failed to start JavaScript error monitoring: {e}")
+
+    def get_javascript_errors(self):
+        """Get JavaScript errors collected since start_javascript_error_monitoring() was called."""
+        if not hasattr(self, 'driver'):
+            return []
+        
+        try:
+            # Get collected errors (assumes monitoring was started)
+            errors = self.driver.execute_script("return window.jsErrors || [];")
             return errors or []
             
         except Exception as e:

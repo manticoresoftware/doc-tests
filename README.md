@@ -1,6 +1,6 @@
-# 🧪 Selenium UI Test Suite - Local Testing Guide
+# 🧪 Selenium UI Test Suite
 
-This guide explains how to run Selenium UI tests locally for the ManticoreSearch documentation website.
+Automated UI tests for the ManticoreSearch documentation website, supporting both local development and CI/CD workflows.
 
 ## 📋 Prerequisites
 
@@ -10,141 +10,62 @@ This guide explains how to run Selenium UI tests locally for the ManticoreSearch
 
 ## 🚀 Quick Start
 
-### 1. Start Selenium Chrome Container
+### 1. Start Selenium Container
 
-#### **Headless Mode (Default)**
-
-**For Intel/AMD64 systems:**
-```bash
-docker run -d -p 4444:4444 selenium/standalone-chrome:4
-```
-
-**For Apple Silicon (ARM64) systems:**
-```bash
-docker run -d -p 4444:4444 --platform linux/amd64 selenium/standalone-chrome:4
-```
-
-#### **Visual Mode with VNC (See Browser Actions)**
-
-**For Intel/AMD64 systems:**
-```bash
-docker run -d -p 4444:4444 -p 7900:7900 selenium/standalone-chrome:4
-```
-
-**For Apple Silicon (ARM64) systems:**
 ```bash
 docker run -d -p 4444:4444 -p 7900:7900 --platform linux/amd64 selenium/standalone-chrome:4
 ```
 
-**To watch test execution:**
-1. Open browser to `http://localhost:7900`
-2. Enter password: `secret`
-3. You'll see Chrome browser inside container
-4. Run your tests with flag `--visual` and watch them execute live!
-
-
-### 2. Set Up Virtual Environment
-
-Navigate to the selenium test directory and create a virtual environment:
+### 2. Setup Python Environment
 
 ```bash
-# Create virtual environment
+# Create and activate virtual environment
 python3 -m venv selenium_env
-
-# Activate virtual environment
 source selenium_env/bin/activate
 
-# You should see (selenium_env) in your prompt
-```
-
-### 3. Install Test Dependencies
-
-With the virtual environment activated:
-
-```bash
 # Install dependencies
 pip install -r core/requirements.txt
 ```
 
-### 4. Run the Tests
-
-From the root directory with virtual environment activated:
+### 3. Run Tests
 
 ```bash
-# Run all Selenium tests
+# Run all tests
 pytest manual/tests -v
 
-# Run specific test file
+# Run specific test
 pytest manual/tests/test_manual_search.py -v
 
 # Run with detailed output
 pytest manual/tests -v -s
 ```
 
-### 5. Deactivate Virtual Environment
+### 4. Watch Tests Execute (Optional)
 
-When done testing:
-
-```bash
-deactivate
-```
-
-## 🔄 Subsequent Test Runs
-
-For future test sessions, you only need to:
-
-```bash
-# 1. Start Selenium container (if not running)
-# Headless mode:
-docker run -d -p 4444:4444 --platform linux/amd64 selenium/standalone-chrome:4
-# Visual mode (with VNC viewer):
-docker run -d -p 4444:4444 -p 7900:7900 --platform linux/amd64 selenium/standalone-chrome:4
-
-# 2. Activate existing virtual environment
-source selenium_env/bin/activate
-
-# 3. Run tests
-pytest manual/tests -v
-
-# 4. Deactivate when done
-deactivate
-```
-
-## 🖥️ Visual Testing (Watch Browser Actions)
-
-### Enable Visual Mode
-
-To see browser actions during test execution:
-
-#### 1. Stop Current Container
-```bash
-docker stop $(docker ps -q --filter ancestor=selenium/standalone-chrome:4)
-```
-
-#### 2. Start VNC-Enabled Container
-```bash
-# For Apple Silicon (ARM64):
-docker run -d -p 4444:4444 -p 7900:7900 --platform linux/amd64 selenium/standalone-chrome:4
-
-# For Intel/AMD64:
-docker run -d -p 4444:4444 -p 7900:7900 selenium/standalone-chrome:4
-```
-
-#### 3. Watch Tests Execute
-1. Open browser to: `http://localhost:7900`
+1. Open browser to `http://localhost:7900`
 2. Enter password: `secret`
-3. Run your tests - you'll see Chrome browser actions live!
+3. Watch your tests run in real-time!
 
-## 🧩 Adding New Tests
+## 🔄 Subsequent Runs
 
-1. Create new test file in `manual/tests/`
-2. Use this template:
+```bash
+# Start container (if not running)
+docker run -d -p 4444:4444 -p 7900:7900 --platform linux/amd64 selenium/standalone-chrome:4
+
+# Activate environment and run tests
+source selenium_env/bin/activate
+pytest manual/tests -v
+deactivate
+```
+
+## 🧩 Writing Tests
+
+Create new test files in `manual/tests/` using this template:
 
 ```python
 import pytest
 from selenium.webdriver.common.by import By
 from core.base_test import BaseTest
-
 
 @pytest.mark.usefixtures("setup_driver")
 class TestNewFeature(BaseTest):
@@ -153,49 +74,122 @@ class TestNewFeature(BaseTest):
         # Your test steps here
 ```
 
-3. Run the new test (from the root directory with venv activated):
+## 🐛 Debugging Tools
 
-```bash
-pytest manual/tests/test_new_feature.py -v
+The `BaseTest` class provides powerful debugging tools for troubleshooting test failures.
+
+### Screenshots
+```python
+# Take manual screenshots
+self.take_screenshot("before_action")
+self.take_screenshot("after_action")
 ```
-## 📁 Directory Structure
 
-After setup, your directory structure will look like:
+- **Local**: Saved to `screenshots/` directory with timestamps
+- **CI**: Automatically uploaded to GitHub Actions artifacts when tests fail
+
+### Console Logs
+```python
+# Capture browser console logs
+self.capture_console_logs("after_page_load")
+```
+
+### JavaScript Errors
+
+JavaScript error detection works in two phases:
+
+```python
+# 1. START monitoring (install listener)
+self.driver.get("https://example.com")
+self.start_javascript_error_monitoring()  # Begin collecting errors
+
+# 2. Perform actions that might cause errors
+button.click()
+
+# 3. END monitoring (retrieve collected errors)
+self.print_javascript_errors("after_action")  # Pretty print errors
+
+# Or get errors programmatically
+errors = self.get_javascript_errors()  # Get raw error data
+assert len(errors) == 0, f"JS errors: {errors}"
+```
+
+### Network Activity
+```python
+# Monitor AJAX/XHR requests
+self.capture_network_logs("api_calls")
+
+# Monitor all network activity
+self.capture_network_logs("all_requests", xhr_only=False)
+```
+
+### Complete Debugging Example
+```python
+@pytest.mark.usefixtures("setup_driver")
+class TestWithDebugging(BaseTest):
+    def test_search_with_full_debugging(self):
+        # Initial state
+        self.take_screenshot("start")
+        self.driver.get("https://manual.manticoresearch.com/")
+        
+        # START monitoring JS errors early
+        self.start_javascript_error_monitoring()
+        
+        # Check page load
+        self.capture_console_logs("page_load")
+        self.print_javascript_errors("page_load")  # Check for early errors
+        
+        # Perform search
+        search_input = self.driver.find_element(By.CLASS_NAME, "DocSearch-Input")
+        search_input.send_keys("SELECT")
+        self.capture_network_logs("search_request")
+        
+        # Final validation
+        self.take_screenshot("final_state")
+        errors = self.get_javascript_errors()  # END monitoring - get all errors
+        if errors:
+            pytest.fail(f"JavaScript errors: {errors}")
+```
+
+## 📊 CI/CD Integration
+
+Tests run automatically on:
+- Pull requests to `main` branch
+- Daily scheduled runs
+
+**Important**: Screenshots are only uploaded to GitHub Actions artifacts when tests **fail**.
+
+## 📁 Project Structure
 
 ```
-├── README.md                  # This guide
-├── conftest.py                # Allows to run in visual mode
+├── README.md                    # This guide
+├── conftest.py                  # Pytest configuration
 ├── core/
-│   ├── requirements.txt       # Dependencies
-│   ├── base_test.py          # WebDriver setup
-│   └── __init__.py           # Package file
+│   ├── requirements.txt         # Python dependencies
+│   ├── base_test.py            # Base test class with debugging tools
+│   └── __init__.py
 └── manual/
-    ├── __init__.py           # Package file
+    ├── __init__.py
     └── tests/
-        ├── __init__.py       # Package file
-        └── test_manual_search.py  # Test file
+        ├── __init__.py
+        └── test_manual_search.py  # Example test
 ```
 
-## 🚀 Quick Command Reference
+## 🎯 Tips & Best Practices
 
-### **Headless Testing (Default)**
-```bash
-# Start container
-docker run -d -p 4444:4444 --platform linux/amd64 selenium/standalone-chrome:4
+### Local Development
+- Use visual mode (`http://localhost:7900`) to watch tests execute
+- Add `time.sleep(2)` between actions for easier observation
+- Take screenshots at key points to document test flow
+- Monitor browser console for JavaScript errors
 
-python3 -m venv selenium_env
-source selenium_env/bin/activate
-pip install -r core/requirements.txt
-pytest manual/tests -v
-```
+### Debugging Failed Tests
+- Check screenshots in `screenshots/` directory (local) or GitHub artifacts (CI)
+- Review console logs and JavaScript errors in test output
+- Use network monitoring to verify API calls
+- Run tests in visual mode to observe browser behavior
 
-### **Visual Testing (Watch Browser)**
-```bash
-# Start VNC-enabled container
-docker run -d -p 4444:4444 -p 7900:7900 --platform linux/amd64 selenium/standalone-chrome:4
-
-# Open VNC viewer: http://localhost:7900 (password: secret)
-# Run tests and watch live!
-source selenium_env/bin/activate
-pytest manual/tests -v
-```
+### Performance
+- Use `xhr_only=True` (default) for network monitoring to reduce noise
+- Take targeted screenshots rather than after every action
+- Clear browser logs periodically in long tests

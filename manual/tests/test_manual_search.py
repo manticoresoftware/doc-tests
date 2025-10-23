@@ -24,6 +24,9 @@ class TestManualSearch(BaseTest):
         # Navigate to website
         print("🌐 Navigating to ManticoreSearch documentation...")
         self.driver.get("https://manual.manticoresearch.com/")
+        
+        # START monitoring JavaScript errors early
+        self.start_javascript_error_monitoring()
 
         # Scroll to top
         self.driver.execute_script("window.scrollTo(0,0)")
