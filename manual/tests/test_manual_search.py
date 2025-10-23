@@ -72,19 +72,7 @@ class TestManualSearch(BaseTest):
         import time
         time.sleep(0.5)
         
-        events_data = self.driver.execute_script("""
-            return {
-                inputEvents: window.inputEventsFired || 0,
-                keydownEvents: window.keydownEventsFired || 0,
-                inputValue: document.getElementById('query').value
-            };
-        """)
-        
-        print(f"After sending 'i':")
-        print(f"  Input events: {events_data['inputEvents']}")
-        print(f"  Keydown events: {events_data['keydownEvents']}")
-        print(f"  Input value: '{events_data['inputValue']}'")
-        
+
 
         print("✅ Selenium send_keys() DOES trigger input events!")
 
