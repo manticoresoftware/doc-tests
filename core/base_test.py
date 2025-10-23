@@ -270,14 +270,17 @@ class BaseTest:
 
     @pytest.fixture(autouse=True, scope="class")
     def setup_driver(self, request):
-        # Chrome options
+        # Address of Selenium Grid or local standalone container
+        selenium_grid_url = "http://localhost:4444/wd/hub"
+
+        # Chrome options for CI
         options = Options()
         
         # Check for --visual flag
         visual_mode = request.config.getoption("--visual", default=False)
         
         if visual_mode:
-            print("🖥️  Running in VISUAL mode")
+            print("🖥️  Running in VISUAL mode - check VNC at http://localhost:7900 (password: secret)")
         else:
             options.add_argument("--headless")  # run without GUI
 
@@ -298,19 +301,12 @@ class BaseTest:
             'browser': 'ALL',
             'performance': 'ALL'
         })
-        
-        # Set Chrome binary path for macOS
-        options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-        try:
-            # Try to use local Chrome driver first
-            from selenium.webdriver.chrome.service import Service
-            driver = webdriver.Chrome(options=options)
-        except Exception as e:
-            print(f"Failed to create local Chrome driver: {e}")
-            print("Trying with selenium manager...")
-            # Let selenium handle driver management
-            driver = webdriver.Chrome(options=options)
+        # Create custom remote WebDriver connection with logging support
+        driver = CustomRemoteWebDriver(
+            command_executor=selenium_grid_url,
+            options=options
+        )
 
         # Attach driver to the test class (so we can use self.driver)
         request.cls.driver = driver
