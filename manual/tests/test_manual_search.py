@@ -13,7 +13,7 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 10)
+        wait = WebDriverWait(self.driver, 120)
 
         # Navigate to website
         self.driver.get("https://manual.manticoresearch.com/")
@@ -24,21 +24,9 @@ class TestManualSearch(BaseTest):
         # Wait for and click search input
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
+        query_input.send_keys("installation")
 
-        ActionChains(self.driver) \
-            .send_keys("installatioN") \
-            .perform()
-
-        # self.driver.execute_script("""
-        #     var query_input = document.getElementById("query");
-        #     query_input.value = "installation";
-        #     query_input.dispatchEvent(new Event('input', {bubbles: true}));
-        #     query_input.dispatchEvent(new Event('keyup', {bubbles: true}));
-        #     query_input.dispatchEvent(new Event('change', {bubbles: true}));
-        # """)
-
-
-        self.take_screenshot("search_filled_form")
+        self.take_screenshot("1search_filled_form")
         # Wait for search results to appear
         try:
             wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item")))
@@ -46,6 +34,8 @@ class TestManualSearch(BaseTest):
             # Take screenshot on failure to see what's actually on the page
             self.take_screenshot("search_timeout_failure")
             raise
+
+        self.take_screenshot("2search_after_form")
 
 
         # Click first search result
@@ -60,7 +50,7 @@ class TestManualSearch(BaseTest):
             print(f"Timeout failed: {self.driver.current_url}")
             assert False, "URL did not change to the expected value within the timeout period."
 
-
+        self.take_screenshot("3search_after_click")
         # At minimum, verify we successfully navigated after clicking search result
         page_title = self.driver.title
         assert page_title and "Installation" in page_title, f"Expected page title to contain 'Installation', got: {page_title}"

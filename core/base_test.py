@@ -136,7 +136,6 @@ class BaseTest:
         
         if visual_mode:
             print("🖥️  Running in VISUAL mode - check VNC at http://localhost:7900 (password: secret)")
-            options.add_argument("--start-maximized")
         else:
             options.add_argument("--headless")  # run without GUI
 
