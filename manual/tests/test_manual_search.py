@@ -46,22 +46,7 @@ class TestManualSearch(BaseTest):
         query_input.click()
         
         # Add event listener to debug if input events are firing
-        self.driver.execute_script("""
-            window.inputEventsFired = 0;
-            window.keydownEventsFired = 0;
-            
-            const input = document.getElementById('query');
-            input.addEventListener('input', function(e) {
-                window.inputEventsFired++;
-                console.log('INPUT EVENT FIRED! Count:', window.inputEventsFired, 'Value:', e.target.value);
-            });
-            input.addEventListener('keydown', function(e) {
-                window.keydownEventsFired++;
-                console.log('KEYDOWN EVENT FIRED! Count:', window.keydownEventsFired, 'Key:', e.key);
-            });
-            
-            console.log('Event listeners added to input element');
-        """)
+
         
         print("Testing if Selenium send_keys triggers JavaScript events...")
         
