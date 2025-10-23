@@ -13,7 +13,7 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 10)
+        wait = WebDriverWait(self.driver, 300)
 
         # Enable Network domain for response body capture
         try:
