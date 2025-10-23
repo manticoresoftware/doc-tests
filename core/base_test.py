@@ -162,7 +162,8 @@ class BaseTest:
                         'url': url,
                         'method': params['request']['method'],
                         'initiator': initiator_type,
-                        'request_id': request_id
+                        'request_id': request_id,
+                        'headers': params['request'].get('headers', {})
                     }
                 
                 elif method == 'Network.responseReceived':
@@ -210,6 +211,13 @@ class BaseTest:
                     
                     print(f"REQUEST: {initiator} {method} {url}")
                     
+                    # Add headers display
+                    headers = req_data.get('headers', {})
+                    if headers:
+                        print("HEADERS:")
+                        for header_name, header_value in headers.items():
+                            print(f"  {header_name}: {header_value}")
+                    
                     if req_id in responses:
                         resp = responses[req_id]
                         print(f"RESPONSE: {resp['status']} {resp['statusText']}")
@@ -254,6 +262,8 @@ class BaseTest:
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument(
+            "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
         
         # Enable logging
         options.set_capability('goog:loggingPrefs', {
