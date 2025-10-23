@@ -49,11 +49,6 @@ class TestManualSearch(BaseTest):
         query_input.click()
         query_input.send_keys("installation")
 
-        # Check events immediately
-        import time
-        time.sleep(0.5)
-
-
         self.take_screenshot("search_input_debug")
 
         # Wait for search results with shorter timeout for debugging
