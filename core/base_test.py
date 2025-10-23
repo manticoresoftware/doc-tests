@@ -1,5 +1,6 @@
 import pytest
 import os
+import json
 from datetime import datetime
 from copy import deepcopy
 from selenium import webdriver
@@ -123,6 +124,117 @@ class BaseTest:
         else:
             print(f"No JavaScript errors found {label}")
 
+    def capture_network_logs(self, label="", xhr_only=True):
+        """Capture and print network requests and responses from performance logs."""
+        if not hasattr(self, 'driver'):
+            return []
+        
+        try:
+            logs = self.driver.get_log('performance')
+            requests = {}
+            responses = {}
+            response_bodies = {}
+            
+            for log in logs:
+                message = json.loads(log['message'])
+                method = message['message']['method']
+                
+                if method == 'Network.requestWillBeSent':
+                    params = message['message']['params']
+                    request_id = params['requestId']
+                    url = params['request']['url']
+                    
+                    # Filter for XHR/AJAX requests if xhr_only is True
+                    initiator = params.get('initiator', {})
+                    initiator_type = initiator.get('type', '')
+                    
+                    if xhr_only:
+                        # Include only actual AJAX requests or search API calls (no JS files)
+                        is_ajax = (
+                            initiator_type in ['xmlhttprequest', 'fetch'] or
+                            (initiator_type == 'script' and '/search' in url.lower() and not url.endswith('.js') and '?' not in url.split('/')[-1])
+                        )
+                        
+                        if not is_ajax:
+                            continue
+                    
+                    requests[request_id] = {
+                        'url': url,
+                        'method': params['request']['method'],
+                        'initiator': initiator_type,
+                        'request_id': request_id
+                    }
+                
+                elif method == 'Network.responseReceived':
+                    params = message['message']['params']
+                    request_id = params['requestId']
+                    
+                    if request_id in requests:
+                        responses[request_id] = {
+                            'status': params['response']['status'],
+                            'statusText': params['response']['statusText'],
+                            'mimeType': params['response'].get('mimeType', ''),
+                            'headers': params['response'].get('headers', {})
+                        }
+                
+                elif method == 'Network.loadingFinished':
+                    params = message['message']['params']
+                    request_id = params['requestId']
+                    
+                    if request_id in requests and request_id in responses:
+                        # Try to get response body using Chrome DevTools Protocol
+                        try:
+                            # Enable Network domain first
+                            self.driver.execute_cdp_cmd('Network.enable', {})
+                            
+                            # Get response body
+                            response = self.driver.execute_cdp_cmd('Network.getResponseBody', {
+                                'requestId': request_id
+                            })
+                            
+                            if 'body' in response:
+                                body = response['body']
+                                if response.get('base64Encoded', False):
+                                    import base64
+                                    body = base64.b64decode(body).decode('utf-8', errors='ignore')
+                                response_bodies[request_id] = body
+                        except Exception as e:
+                            response_bodies[request_id] = f"(Could not capture body: {str(e)})"
+            
+            if requests:
+                print(f"\n=== {'XHR/AJAX ' if xhr_only else ''}Network Activity {label} ===")
+                for req_id, req_data in requests.items():
+                    initiator = req_data['initiator'].upper()
+                    method = req_data['method']
+                    url = req_data['url']
+                    
+                    print(f"REQUEST: {initiator} {method} {url}")
+                    
+                    if req_id in responses:
+                        resp = responses[req_id]
+                        print(f"RESPONSE: {resp['status']} {resp['statusText']}")
+                        print(f"MIME TYPE: {resp['mimeType']}")
+                        
+                        if req_id in response_bodies:
+                            body = response_bodies[req_id]
+                            if len(body) > 500:
+                                print(f"BODY: {body[:500]}... (truncated)")
+                            else:
+                                print(f"BODY: {body}")
+                        else:
+                            print("BODY: (no body captured)")
+                    else:
+                        print("RESPONSE: (no response captured)")
+                    print("-" * 50)
+                print("=== End Network Activity ===\n")
+            else:
+                print(f"No {'XHR/AJAX ' if xhr_only else ''}network activity found {label}")
+            
+            return list(requests.values())
+        except Exception as e:
+            print(f"Failed to capture network logs: {e}")
+            return []
+
     @pytest.fixture(autouse=True, scope="class")
     def setup_driver(self, request):
         # Address of Selenium Grid or local standalone container
@@ -144,7 +256,10 @@ class BaseTest:
         options.add_argument("--disable-dev-shm-usage")
         
         # Enable logging
-        options.set_capability('goog:loggingPrefs', {'browser': 'ALL'})
+        options.set_capability('goog:loggingPrefs', {
+            'browser': 'ALL',
+            'performance': 'ALL'
+        })
 
         # Create custom remote WebDriver connection with logging support
         driver = CustomRemoteWebDriver(

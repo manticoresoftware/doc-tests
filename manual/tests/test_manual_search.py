@@ -13,7 +13,13 @@ class TestManualSearch(BaseTest):
 
     def test_basesearch(self):
         """Test search functionality with installation query."""
-        wait = WebDriverWait(self.driver, 120)
+        wait = WebDriverWait(self.driver, 10)
+
+        # Enable Network domain for response body capture
+        try:
+            self.driver.execute_cdp_cmd('Network.enable', {})
+        except Exception as e:
+            print(f"Could not enable Network domain: {e}")
 
         # Navigate to website
         self.driver.get("https://manual.manticoresearch.com/")
@@ -27,6 +33,14 @@ class TestManualSearch(BaseTest):
         query_input.send_keys("installation")
 
         self.take_screenshot("1search_filled_form")
+        
+        # Wait a bit for requests to complete
+        import time
+        time.sleep(1)
+        
+        # Capture AJAX/search requests right after typing
+        self.capture_network_logs("after_search_input", xhr_only=True)
+        
         # Wait for search results to appear
         try:
             wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item")))
@@ -36,7 +50,6 @@ class TestManualSearch(BaseTest):
             raise
 
         self.take_screenshot("2search_after_form")
-
 
         # Click first search result
         first_result = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, ".search-res-item:nth-child(1) a")))
