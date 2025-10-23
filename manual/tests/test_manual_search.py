@@ -27,6 +27,7 @@ class TestManualSearch(BaseTest):
         # Scroll to top
         self.driver.execute_script("window.scrollTo(0,0)")
 
+        self.get_javascript_errors()
         # Wait for and click search input
         query_input = wait.until(EC.element_to_be_clickable((By.ID, "query")))
         query_input.click()
@@ -41,6 +42,9 @@ class TestManualSearch(BaseTest):
             # Take screenshot on failure to see what's actually on the page
             # Capture AJAX/search requests right after typing
             self.capture_network_logs("after_fail", xhr_only=True)
+            self.capture_console_logs("JS logs")
+
+            self.print_javascript_errors("JS errors")
             self.take_screenshot("search_timeout_failure")
             raise
 
