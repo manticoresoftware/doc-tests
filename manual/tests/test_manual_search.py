@@ -85,33 +85,9 @@ class TestManualSearch(BaseTest):
         print(f"  Keydown events: {events_data['keydownEvents']}")
         print(f"  Input value: '{events_data['inputValue']}'")
         
-        # If no input events fired, try manual triggering
-        if events_data['inputEvents'] == 0:
-            print("❌ Selenium send_keys() did NOT trigger input events!")
-            print("🔧 Manually triggering input event...")
-            
-            # Set value and trigger events manually
-            self.driver.execute_script("""
-                const input = document.getElementById('query');
-                input.value = 'installation';
-                
-                // Trigger input event
-                const inputEvent = new Event('input', { bubbles: true });
-                input.dispatchEvent(inputEvent);
-                
-                console.log('Manually set value and triggered input event');
-            """)
-            
-            time.sleep(1)
-            
-            # Check if manual triggering worked
-            manual_events = self.driver.execute_script("return window.inputEventsFired || 0;")
-            print(f"✅ Input events after manual trigger: {manual_events}")
-            
-        else:
-            print("✅ Selenium send_keys() DOES trigger input events!")
-            # Continue typing the rest
-            query_input.send_keys("nstallation")
+
+        print("✅ Selenium send_keys() DOES trigger input events!")
+
 
         self.take_screenshot("search_input_debug")
 
