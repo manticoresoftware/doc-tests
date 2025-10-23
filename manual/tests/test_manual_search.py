@@ -24,7 +24,10 @@ class TestManualSearch(BaseTest):
         # Navigate to website
         print("🌐 Navigating to ManticoreSearch documentation...")
         self.driver.get("https://manual.manticoresearch.com/")
-        
+
+        # Scroll to top
+        self.driver.execute_script("window.scrollTo(0,0)")
+
         # Wait a moment for the page to fully load
         import time
         time.sleep(2)
@@ -44,18 +47,6 @@ class TestManualSearch(BaseTest):
             raise Exception("Could not find search input element")
 
         query_input.click()
-        # query_input.send_keys("i")
-        # query_input.send_keys("n")
-        # query_input.send_keys("s")
-        # query_input.send_keys("t")
-        # query_input.send_keys("a")
-        # query_input.send_keys("l")
-        # query_input.send_keys("l")
-        # query_input.send_keys("a")
-        # query_input.send_keys("t")
-        # query_input.send_keys("i")
-        # query_input.send_keys("o")
-        # query_input.send_keys("n")
         query_input.send_keys("installation")
 
         # Check events immediately
