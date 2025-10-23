@@ -178,6 +178,24 @@ class BaseTest:
                             'headers': params['response'].get('headers', {})
                         }
                 
+                elif method == 'Network.loadingFailed':
+                    params = message['message']['params']
+                    request_id = params['requestId']
+                    
+                    if request_id in requests:
+                        error_text = params.get('errorText', 'Unknown error')
+                        canceled = params.get('canceled', False)
+                        blocked_reason = params.get('blockedReason', None)
+                        
+                        responses[request_id] = {
+                            'status': 'FAILED',
+                            'statusText': error_text,
+                            'mimeType': '',
+                            'headers': {},
+                            'canceled': canceled,
+                            'blockedReason': blocked_reason
+                        }
+                
                 elif method == 'Network.loadingFinished':
                     params = message['message']['params']
                     request_id = params['requestId']
@@ -220,17 +238,24 @@ class BaseTest:
                     
                     if req_id in responses:
                         resp = responses[req_id]
-                        print(f"RESPONSE: {resp['status']} {resp['statusText']}")
-                        print(f"MIME TYPE: {resp['mimeType']}")
-                        
-                        if req_id in response_bodies:
-                            body = response_bodies[req_id]
-                            if len(body) > 500:
-                                print(f"BODY: {body[:500]}... (truncated)")
-                            else:
-                                print(f"BODY: {body}")
+                        if resp['status'] == 'FAILED':
+                            print(f"RESPONSE: FAILED - {resp['statusText']}")
+                            if resp.get('canceled'):
+                                print("REQUEST WAS CANCELED")
+                            if resp.get('blockedReason'):
+                                print(f"BLOCKED REASON: {resp['blockedReason']}")
                         else:
-                            print("BODY: (no body captured)")
+                            print(f"RESPONSE: {resp['status']} {resp['statusText']}")
+                            print(f"MIME TYPE: {resp['mimeType']}")
+                            
+                            if req_id in response_bodies:
+                                body = response_bodies[req_id]
+                                if len(body) > 500:
+                                    print(f"BODY: {body[:500]}... (truncated)")
+                                else:
+                                    print(f"BODY: {body}")
+                            else:
+                                print("BODY: (no body captured)")
                     else:
                         print("RESPONSE: (no response captured)")
                     print("-" * 50)
@@ -245,23 +270,26 @@ class BaseTest:
 
     @pytest.fixture(autouse=True, scope="class")
     def setup_driver(self, request):
-        # Address of Selenium Grid or local standalone container
-        selenium_grid_url = "http://localhost:4444/wd/hub"
-
-        # Chrome options for CI
+        # Chrome options
         options = Options()
         
         # Check for --visual flag
         visual_mode = request.config.getoption("--visual", default=False)
         
         if visual_mode:
-            print("🖥️  Running in VISUAL mode - check VNC at http://localhost:7900 (password: secret)")
+            print("🖥️  Running in VISUAL mode")
         else:
             options.add_argument("--headless")  # run without GUI
 
         options.add_argument("--window-size=1920,1080")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--disable-web-security")
+        options.add_argument("--disable-features=VizDisplayCompositor")
+        options.add_argument("--ignore-ssl-errors")
+        options.add_argument("--ignore-certificate-errors")
+        options.add_argument("--allow-running-insecure-content")
+        options.add_argument("--disable-extensions")
         options.add_argument(
             "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
         
@@ -270,12 +298,19 @@ class BaseTest:
             'browser': 'ALL',
             'performance': 'ALL'
         })
+        
+        # Set Chrome binary path for macOS
+        options.binary_location = "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 
-        # Create custom remote WebDriver connection with logging support
-        driver = CustomRemoteWebDriver(
-            command_executor=selenium_grid_url,
-            options=options
-        )
+        try:
+            # Try to use local Chrome driver first
+            from selenium.webdriver.chrome.service import Service
+            driver = webdriver.Chrome(options=options)
+        except Exception as e:
+            print(f"Failed to create local Chrome driver: {e}")
+            print("Trying with selenium manager...")
+            # Let selenium handle driver management
+            driver = webdriver.Chrome(options=options)
 
         # Attach driver to the test class (so we can use self.driver)
         request.cls.driver = driver
