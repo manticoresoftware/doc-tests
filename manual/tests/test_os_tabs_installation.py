@@ -31,10 +31,7 @@ class TestOsTabsInstallation(BaseTest):
         example = block.find_element(By.XPATH, "./ancestor::div[contains(@class, 'example')]")
         bodies = example.find_elements(By.CSS_SELECTOR, ".example-body")
         for body in bodies:
-            visible = self.driver.execute_script(
-                "return getComputedStyle(arguments[0]).display !== 'none'", body
-            )
-            if visible:
+            if body.is_displayed():
                 return body.text.strip()
         return ""
 
@@ -45,12 +42,18 @@ class TestOsTabsInstallation(BaseTest):
 
     def _click_tab(self, block, tab_text):
         """Click a tab by its text content."""
+        old_content = self._get_visible_body_text(block)
         tabs = block.find_elements(By.CSS_SELECTOR, "li")
         for tab in tabs:
             span = tab.find_element(By.CSS_SELECTOR, "span.lang-text")
             if span.get_attribute("textContent").strip() == tab_text:
-                tab.click()
-                time.sleep(2)
+                self.driver.execute_script("arguments[0].click();", tab)
+                # Wait for content to change (up to 5 seconds)
+                for _ in range(10):
+                    time.sleep(0.5)
+                    new_content = self._get_visible_body_text(block)
+                    if new_content != old_content:
+                        break
                 return
         pytest.fail(f"Tab '{tab_text}' not found")
 
@@ -66,7 +69,6 @@ class TestOsTabsInstallation(BaseTest):
         assert "yum install" in content, \
             f"RHEL tab should show yum install command, got: '{content[:100]}'"
 
-        self.take_screenshot("os_tab_default_rhel")
 
     def test_switch_to_debian(self):
         """Verify switching to Debian tab shows apt/wget commands."""
@@ -82,7 +84,6 @@ class TestOsTabsInstallation(BaseTest):
         assert "wget" in content or "apt" in content, \
             f"Debian tab should show wget/apt commands, got: '{content[:100]}'"
 
-        self.take_screenshot("os_tab_debian")
 
     def test_switch_to_docker(self):
         """Verify switching to Docker tab shows docker commands."""
@@ -98,7 +99,6 @@ class TestOsTabsInstallation(BaseTest):
         assert "docker" in content.lower(), \
             f"Docker tab should show docker commands, got: '{content[:100]}'"
 
-        self.take_screenshot("os_tab_docker")
 
     def test_switch_to_macos(self):
         """Verify switching to MacOS tab shows brew commands."""
@@ -114,7 +114,6 @@ class TestOsTabsInstallation(BaseTest):
         assert "brew" in content, \
             f"MacOS tab should show brew command, got: '{content[:100]}'"
 
-        self.take_screenshot("os_tab_macos")
 
     def test_switch_to_kubernetes(self):
         """Verify switching to Kubernetes tab shows helm commands."""
@@ -130,7 +129,6 @@ class TestOsTabsInstallation(BaseTest):
         assert "helm" in content, \
             f"Kubernetes tab should show helm commands, got: '{content[:100]}'"
 
-        self.take_screenshot("os_tab_kubernetes")
 
     def test_switching_tabs_changes_content(self):
         """Verify that switching between tabs actually changes visible content."""

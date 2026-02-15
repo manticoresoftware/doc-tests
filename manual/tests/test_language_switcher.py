@@ -28,7 +28,6 @@ class TestLanguageSwitcher(BaseTest):
         assert h1.text == "Введение", \
             f"H1 should be 'Введение', got: '{h1.text}'"
 
-        self.take_screenshot("language_russian")
 
     def test_switch_to_chinese(self):
         """Verify switching language to Chinese changes content and URL."""
@@ -42,7 +41,6 @@ class TestLanguageSwitcher(BaseTest):
         assert "/zh/" in self.driver.current_url, \
             f"URL should contain '/zh/', got: {self.driver.current_url}"
 
-        self.take_screenshot("language_chinese")
 
     def test_switch_back_to_english(self):
         """Verify switching from Russian back to English restores content."""
@@ -68,7 +66,6 @@ class TestLanguageSwitcher(BaseTest):
         assert h1.text == "Introduction", \
             f"H1 should be 'Introduction', got: '{h1.text}'"
 
-        self.take_screenshot("language_back_to_english")
 
     def test_language_cookie_persists(self):
         """Verify that language selection is saved in cookie."""
@@ -92,4 +89,3 @@ class TestLanguageSwitcher(BaseTest):
         assert selected_option.get_attribute("value") == "ru", \
             f"Language selector should still be 'ru', got: '{selected_option.get_attribute('value')}'"
 
-        self.take_screenshot("language_cookie_persists")
