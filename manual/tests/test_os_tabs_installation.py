@@ -53,7 +53,10 @@ class TestOsTabsInstallation(BaseTest):
                     time.sleep(0.5)
                     new_content = self._get_visible_body_text(block)
                     if new_content != old_content:
+                        tab_text = self._get_active_tab_text(block)
                         break
+                self.driver.execute_script("arguments[0].click();", tab)
+                time.sleep(0.5)
                 return
         pytest.fail(f"Tab '{tab_text}' not found")
 
