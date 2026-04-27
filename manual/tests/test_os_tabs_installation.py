@@ -42,32 +42,48 @@ class TestOsTabsInstallation(BaseTest):
 
     def _click_tab(self, block, tab_text):
         """Click a tab by its text content."""
-        old_content = self._get_visible_body_text(block)
         tabs = block.find_elements(By.CSS_SELECTOR, "li")
+        target_tab = None
+
         for tab in tabs:
             span = tab.find_element(By.CSS_SELECTOR, "span.lang-text")
             if span.get_attribute("textContent").strip() == tab_text:
-                self.driver.execute_script("arguments[0].click();", tab)
-                # Wait for content to change (up to 5 seconds)
-                for _ in range(10):
-                    time.sleep(0.5)
-                    new_content = self._get_visible_body_text(block)
-                    if new_content != old_content:
-                        tab_text = self._get_active_tab_text(block)
-                        break
-                self.driver.execute_script("arguments[0].click();", tab)
-                time.sleep(0.5)
-                return
-        pytest.fail(f"Tab '{tab_text}' not found")
+                target_tab = tab
+                break
 
+        if target_tab is None:
+            pytest.fail(f"Tab '{tab_text}' not found")
+
+        # If requested tab is already active, no-op to avoid unnecessary re-clicks.
+        if "active" in (target_tab.get_attribute("class") or "").split():
+            return
+
+        old_content = self._get_visible_body_text(block)
+
+        # Use native click first; fallback to JS click for overlays/interception.
+        try:
+            target_tab.click()
+        except Exception:
+            self.driver.execute_script("arguments[0].click();", target_tab)
+
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(lambda _: tab_text == self._get_active_tab_text(block))
+        wait.until(
+            lambda _: (
+                (new_content := self._get_visible_body_text(block)) != old_content
+                and bool(new_content)
+            )
+        )
+
+    
     def test_default_tab_is_rhel(self):
         """Verify that RHEL tab is active by default."""
         block = self._get_tab_block()
-
+    
         active = self._get_active_tab_text(block)
         assert "RHEL" in active, \
             f"Default active tab should contain 'RHEL', got: '{active}'"
-
+    
         content = self._get_visible_body_text(block)
         assert "yum install" in content, \
             f"RHEL tab should show yum install command, got: '{content[:100]}'"
