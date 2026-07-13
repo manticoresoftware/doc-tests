@@ -1,8 +1,8 @@
 import pytest
 import time
+from urllib.parse import urlparse
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import Select, WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 from core.base_test import BaseTest
 
 
@@ -11,6 +11,16 @@ class TestLanguageSwitcher(BaseTest):
     """Tests for language switching functionality on the documentation site."""
 
     BASE_URL = "https://manual.manticoresearch.com/"
+
+    def _current_path(self):
+        """Return the current URL path without a trailing slash."""
+        return urlparse(self.driver.current_url).path.rstrip("/")
+
+    def _assert_language_path(self, language):
+        """Check localized root URLs with or without a trailing slash."""
+        path = self._current_path()
+        assert path == f"/{language}" or path.startswith(f"/{language}/"), \
+            f"URL path should be '/{language}' or start with '/{language}/', got: {self.driver.current_url}"
 
     def test_switch_to_russian(self):
         """Verify switching language to Russian changes content and URL."""
@@ -21,8 +31,7 @@ class TestLanguageSwitcher(BaseTest):
         select.select_by_value("ru")
         time.sleep(2)
 
-        assert "/ru/" in self.driver.current_url, \
-            f"URL should contain '/ru/', got: {self.driver.current_url}"
+        self._assert_language_path("ru")
 
         h1 = self.driver.find_element(By.TAG_NAME, "h1")
         assert h1.text == "Введение", \
@@ -38,8 +47,7 @@ class TestLanguageSwitcher(BaseTest):
         select.select_by_value("zh")
         time.sleep(2)
 
-        assert "/zh/" in self.driver.current_url, \
-            f"URL should contain '/zh/', got: {self.driver.current_url}"
+        self._assert_language_path("zh")
 
 
     def test_switch_back_to_english(self):
@@ -52,15 +60,15 @@ class TestLanguageSwitcher(BaseTest):
         select.select_by_value("ru")
         time.sleep(2)
 
-        assert "/ru/" in self.driver.current_url
+        self._assert_language_path("ru")
 
         # Switch back to English
         select = Select(self.driver.find_element(By.ID, "language-select"))
         select.select_by_value("")
         time.sleep(2)
 
-        assert "/ru/" not in self.driver.current_url, \
-            f"URL should not contain '/ru/' after switching back, got: {self.driver.current_url}"
+        assert not self._current_path().startswith("/ru"), \
+            f"URL should not be under '/ru' after switching back, got: {self.driver.current_url}"
 
         h1 = self.driver.find_element(By.TAG_NAME, "h1")
         assert h1.text == "Introduction", \
