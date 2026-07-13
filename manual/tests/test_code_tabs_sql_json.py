@@ -185,6 +185,9 @@ class TestCodeTabsSqlJson(BaseTest):
         # Switch block1 to HTTP — block2 should sync automatically
         self._click_tab(block1, "HTTP")
 
+        wait = WebDriverWait(self.driver, 10)
+        wait.until(lambda _: self._get_active_tab_text(block2) == "HTTP")
+
         active2 = self._get_active_tab_text(block2)
         assert active2 == "HTTP", \
             f"Tab sync: block2 should also switch to HTTP, got: '{active2}'"
