@@ -5,7 +5,7 @@ Automated UI tests for the ManticoreSearch documentation website, supporting bot
 ## 📋 Prerequisites
 
 - Docker installed and running
-- Python 3.9+ installed
+- Python 3.10+ installed
 - Git repository cloned locally
 
 ## 🚀 Quick Start
